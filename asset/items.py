@@ -16,7 +16,7 @@ class AssetItem(scrapy.Item):
         input_processor=MapCompose(),
         output_processor=TakeFirst()
     )
-    image_url = scrapy.Field(
+    main_image_url = scrapy.Field(
         input_processor=MapCompose(),
         output_processor=TakeFirst()
     )

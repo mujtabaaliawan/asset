@@ -29,15 +29,16 @@ class AssetSpider(scrapy.Spider):
         for rental in page_property_data.css(selectors.PROPERTIES_CONTENT):
 
             name = rental.css(selectors.NAME).get()
-            image_url = rental.css(selectors.IMAGE_URL).get()
+            main_image_url = rental.css(selectors.IMAGE_URL).get()
             location = rental.css(selectors.LOCATION).getall()
             description = rental.css(selectors.DESCRIPTION).get()
             meta_data = rental.css(selectors.META_DATA_PRICE_BEDROOM_SIZE_DATE).getall()
             badge_status = rental.css(selectors.PROPERTY_BADGE_STATUS).get()
+            detail_link = rental.css(selectors.FURTHER_DETAIL_LINK).get()
 
             product = ItemLoader(item=AssetItem())
             product.add_value('title', name)
-            product.add_value('image_url', image_url)
+            product.add_value('main_image_url', main_image_url)
             product.add_value('badge_status', badge_status)
             product.add_value('description', description)
 
