@@ -2,6 +2,7 @@ DOCUMENT_TITLE = "div.document-title h1::text"
 DOCUMENT_TITLE_DETAIL = "div.document-title p::text"
 TOTAL_PROPERTIES = "div.total-property::text"
 
+'''MAIN PAGE SELECTORS'''
 MAIN_CONTENT = "div.content"
 PROPERTIES_CONTENT = "article.property-row"
 IMAGE_URL = "a.property-row-image img::attr(src)"
@@ -14,3 +15,6 @@ DESCRIPTION = "div.property-row-body p::text"
 META_DATA_PRICE_BEDROOM_SIZE_DATE = "div.property-row-meta strong::text"
 
 NEXT_PAGE = "a.next::attr(href)"
+
+'''DETAIL PAGE SELECTORS'''
+

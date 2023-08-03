@@ -54,3 +54,7 @@ class AssetSpider(scrapy.Spider):
         if next_page_link is not None:
             yield scrapy.Request(next_page_link, callback=self.parse)
 
+
+    def detail_parse(self, response, **kwargs):
+
+
