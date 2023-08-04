@@ -1,0 +1,2 @@
+DETAIL_BREAKING_POINT = "on the map"
+IS_DETAIL_COMPLETED = False

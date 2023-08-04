@@ -3,7 +3,8 @@ from itemloaders.processors import TakeFirst, MapCompose, Join
 
 
 def clean_text(value):
-    return value.strip().replace('\n', '').replace('\xa0', ' ')
+    updated_value = value.replace('\n', '').replace('\t', '').replace('\xa0', ' ').strip()
+    return updated_value
 
 
 def extract_price(value):

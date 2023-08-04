@@ -1,8 +1,39 @@
 import scrapy
 from itemloaders import ItemLoader
+
+from asset.constants import constants
 from asset.items import AssetItem
 from asset.urls import urls
 from asset.selectors import selectors
+
+
+def check_is_detail_extraction_complete(text):
+    return constants.DETAIL_BREAKING_POINT in text
+
+
+def check_is_cleaned_text_empty(text):
+    text.replace('\n', '').replace('\t', '').replace('\xa0', ' ').strip()
+    return text.isspace()
+
+
+def complete_product_detail_list(detail_content, product):
+
+    is_detail_completed = constants.IS_DETAIL_COMPLETED
+
+    for detail in detail_content:
+        detail_text = detail.css(selectors.DETAIL_TEXT).getall()
+        if is_detail_completed is True:
+            break
+
+        for info in detail_text:
+
+            if check_is_detail_extraction_complete(info):
+                is_detail_completed = True
+                break
+
+            if check_is_cleaned_text_empty(info):
+                continue
+            product.add_value('details_list', info)
 
 
 class AssetSpider(scrapy.Spider):
@@ -68,18 +99,13 @@ class AssetSpider(scrapy.Spider):
         facilities_list = response.css(selectors.FACILITIES).getall()
 
         detail_content = response.css(selectors.DETAIL_CONTENT)
-        details_list = detail_content.css(selectors.DETAIL).getall()
+        complete_product_detail_list(detail_content, product)
 
         if badge_status is not None:
             overview_to_index_mapping[3]['index'] = 8
 
         for image in images_urls_list:
             product.add_value('images_urls_list', image)
-
-        for paragraph in details_list:
-            if paragraph == "Locatie : ":
-                break
-            product.add_value('details_list', paragraph)
 
         for facility in facilities_list:
             product.add_value('facilities_list', facility)
