@@ -1,9 +1,9 @@
 import scrapy
-from itemloaders.processors import TakeFirst, MapCompose
+from itemloaders.processors import TakeFirst, MapCompose, Join
 
 
 def clean_text(value):
-    return value.strip().replace('\n', '').replace('\t', '')
+    return value.strip().replace('\n', '').replace('\xa0', ' ')
 
 
 def extract_price(value):
@@ -16,9 +16,9 @@ class AssetItem(scrapy.Item):
         input_processor=MapCompose(),
         output_processor=TakeFirst()
     )
-    main_image_url = scrapy.Field(
+    images_urls_list = scrapy.Field(
         input_processor=MapCompose(),
-        output_processor=TakeFirst()
+        output_processor=Join(separator=',')
     )
     city = scrapy.Field(
         input_processor=MapCompose(),
@@ -32,15 +32,35 @@ class AssetItem(scrapy.Item):
         input_processor=MapCompose(),
         output_processor=TakeFirst()
     )
-    description = scrapy.Field(
-        input_processor=MapCompose(),
-        output_processor=TakeFirst()
+    details_list = scrapy.Field(
+        input_processor=MapCompose(clean_text),
+        output_processor=Join()
     )
-    price_in_pounds = scrapy.Field(
+    facilities_list = scrapy.Field(
+        input_processor=MapCompose(),
+        output_processor=Join(separator=',')
+    )
+    price_in_euro = scrapy.Field(
         input_processor=MapCompose(extract_price),
         output_processor=TakeFirst()
     )
     number_of_bedrooms = scrapy.Field(
+        input_processor=MapCompose(),
+        output_processor=TakeFirst()
+    )
+    number_of_bathrooms = scrapy.Field(
+        input_processor=MapCompose(),
+        output_processor=TakeFirst()
+    )
+    furnished_status = scrapy.Field(
+        input_processor=MapCompose(),
+        output_processor=TakeFirst()
+    )
+    type = scrapy.Field(
+        input_processor=MapCompose(),
+        output_processor=TakeFirst()
+    )
+    id = scrapy.Field(
         input_processor=MapCompose(),
         output_processor=TakeFirst()
     )

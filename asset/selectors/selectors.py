@@ -16,5 +16,11 @@ META_DATA_PRICE_BEDROOM_SIZE_DATE = "div.property-row-meta strong::text"
 
 NEXT_PAGE = "a.next::attr(href)"
 
+
 '''DETAIL PAGE SELECTORS'''
 
+OVERVIEW_DETAILS = "div.property-overview dd::text"
+IMAGES_URLS = "div.property-gallery a::attr(href)"
+FACILITIES = "div.property-amenities li::text"
+DETAIL_CONTENT = "div.entry-content"
+DETAIL = "p::text, p>a::text, p>strong::text, li:not([class*='yes'])::text"
