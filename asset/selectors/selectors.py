@@ -11,11 +11,7 @@ PROPERTY_DATA = "div.property-row-main"
 NAME = "h2.property-row-title a::text"
 FURTHER_DETAIL_LINK = "h2.property-row-title a::attr(href)"
 LOCATION = "div.property-row-location a::text"
-DESCRIPTION = "div.property-row-body p::text"
-META_DATA_PRICE_BEDROOM_SIZE_DATE = "div.property-row-meta strong::text"
-
 NEXT_PAGE = "a.next::attr(href)"
-
 
 '''DETAIL PAGE SELECTORS'''
 
@@ -23,5 +19,4 @@ OVERVIEW_DETAILS = "div.property-overview dt::text, dd::text"
 IMAGES_URLS = "div.property-gallery a::attr(href)"
 FACILITIES = "div.property-amenities li::text"
 DETAIL_CONTENT = "div.entry-content"
-DETAIL = "p::text, p>strong::text, li:not([class*='yes'])::text"
 DETAIL_TEXT = "*::text"
