@@ -19,7 +19,7 @@ NEXT_PAGE = "a.next::attr(href)"
 
 '''DETAIL PAGE SELECTORS'''
 
-OVERVIEW_DETAILS = "div.property-overview dd::text"
+OVERVIEW_DETAILS = "div.property-overview dt::text, dd::text"
 IMAGES_URLS = "div.property-gallery a::attr(href)"
 FACILITIES = "div.property-amenities li::text"
 DETAIL_CONTENT = "div.entry-content"

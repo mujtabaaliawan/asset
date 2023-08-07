@@ -17,7 +17,6 @@ def check_is_cleaned_text_empty(text):
 
 
 def complete_product_detail_list(detail_content, product):
-
     is_detail_completed = constants.IS_DETAIL_COMPLETED
 
     for detail in detail_content:
@@ -36,47 +35,52 @@ def complete_product_detail_list(detail_content, product):
             product.add_value('details_list', info)
 
 
+def add_product_overview_details(product, overview_details):
+    overview_fields = ['Prijs', 'Available', 'Bedrooms', 'Bathrooms', 'Furnished', 'Type', 'Size', 'ID']
+    product_field_map = ['price_in_euro', 'availability_date', 'bedrooms', 'bathrooms', 'furnished_status', 'type',
+                         'size', 'id']
+
+    for field in overview_fields:
+        if field in overview_details:
+            field_index = overview_details.index(field)
+            value_index = field_index + 1
+            mapping_index = overview_fields.index(field)
+            product.add_value(product_field_map[mapping_index], overview_details[value_index])
+
+
+def add_product_location_fields(product, location):
+    location_to_index_mapping = [
+        {'field_name': 'city', 'index': 0},
+        {'field_name': 'district', 'index': 1},
+        {'field_name': 'local_area', 'index': 2},
+    ]
+
+    for location_index_map in location_to_index_mapping:
+        product.add_value(location_index_map['field_name'], location[location_index_map['index']])
+
+
 class AssetSpider(scrapy.Spider):
     name = "samurai"
     start_urls = [urls.ASSET_URL]
 
     def parse(self, response, **kwargs):
 
-        location_to_index_mapping = [
-            {'field_name': 'city', 'index': 0},
-            {'field_name': 'district', 'index': 1},
-            {'field_name': 'local_area', 'index': 2},
-        ]
-
-        meta_data_to_index_mapping = [
-            {'field_name': 'price_in_euro', 'index': 0},
-            {'field_name': 'number_of_bedrooms', 'index': 1},
-            {'field_name': 'size', 'index': 2},
-            {'field_name': 'availability_date', 'index': 3},
-        ]
-
         page_property_data = response.css(selectors.MAIN_CONTENT)
 
         for rental in page_property_data.css(selectors.PROPERTIES_CONTENT):
+            product = ItemLoader(item=AssetItem())
 
             name = rental.css(selectors.NAME).get()
-            location = rental.css(selectors.LOCATION).getall()
-            meta_data = rental.css(selectors.META_DATA_PRICE_BEDROOM_SIZE_DATE).getall()
-            badge_status = rental.css(selectors.PROPERTY_BADGE_STATUS).get()
-            rental_detail_link = rental.css(selectors.FURTHER_DETAIL_LINK).get()
-
-            product = ItemLoader(item=AssetItem())
             product.add_value('title', name)
+
+            badge_status = rental.css(selectors.PROPERTY_BADGE_STATUS).get()
             product.add_value('badge_status', badge_status)
 
-            for location_index_map in location_to_index_mapping:
-                product.add_value(location_index_map['field_name'], location[location_index_map['index']])
+            location = rental.css(selectors.LOCATION).getall()
+            add_product_location_fields(product, location)
 
-            for meta_data_index_map in meta_data_to_index_mapping:
-                product.add_value(meta_data_index_map['field_name'], meta_data[meta_data_index_map['index']])
-
-            yield scrapy.Request(rental_detail_link, callback=self.detail_parse, meta={"product": product,
-                                                                                       "badge_status": badge_status})
+            rental_detail_link = rental.css(selectors.FURTHER_DETAIL_LINK).get()
+            yield scrapy.Request(rental_detail_link, callback=self.detail_parse, meta={"product": product})
 
         next_page_link = response.css(selectors.NEXT_PAGE).get()
         if next_page_link is not None:
@@ -85,33 +89,19 @@ class AssetSpider(scrapy.Spider):
     @staticmethod
     def detail_parse(response):
         product = response.meta["product"]
-        badge_status = response.meta["badge_status"]
 
-        overview_to_index_mapping = [
-            {'field_name': 'number_of_bathrooms', 'index': 3},
-            {'field_name': 'furnished_status', 'index': 4},
-            {'field_name': 'type', 'index': 5},
-            {'field_name': 'id', 'index': 7},
-        ]
-
-        overview = response.css(selectors.OVERVIEW_DETAILS).getall()
-        images_urls_list = response.css(selectors.IMAGES_URLS).getall()
-        facilities_list = response.css(selectors.FACILITIES).getall()
+        overview_details = response.css(selectors.OVERVIEW_DETAILS).getall()
+        add_product_overview_details(product, overview_details)
 
         detail_content = response.css(selectors.DETAIL_CONTENT)
         complete_product_detail_list(detail_content, product)
 
-        if badge_status is not None:
-            overview_to_index_mapping[3]['index'] = 8
-
+        images_urls_list = response.css(selectors.IMAGES_URLS).getall()
         for image in images_urls_list:
             product.add_value('images_urls_list', image)
 
+        facilities_list = response.css(selectors.FACILITIES).getall()
         for facility in facilities_list:
             product.add_value('facilities_list', facility)
 
-        for overview_index_map in overview_to_index_mapping:
-            product.add_value(overview_index_map['field_name'], overview[overview_index_map['index']])
-
         yield product.load_item()
-

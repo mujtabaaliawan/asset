@@ -3,8 +3,11 @@ from itemloaders.processors import TakeFirst, MapCompose, Join
 
 
 def clean_text(value):
-    updated_value = value.replace('\n', '').replace('\t', '').replace('\xa0', ' ').strip()
-    return updated_value
+    return value.replace('\n', '').replace('\t', '').replace('\xa0', ' ').strip()
+
+
+def clean_size(value):
+    return value.replace(' ', '')
 
 
 def extract_price(value):
@@ -45,11 +48,11 @@ class AssetItem(scrapy.Item):
         input_processor=MapCompose(extract_price),
         output_processor=TakeFirst()
     )
-    number_of_bedrooms = scrapy.Field(
+    bedrooms = scrapy.Field(
         input_processor=MapCompose(),
         output_processor=TakeFirst()
     )
-    number_of_bathrooms = scrapy.Field(
+    bathrooms = scrapy.Field(
         input_processor=MapCompose(),
         output_processor=TakeFirst()
     )
@@ -66,7 +69,7 @@ class AssetItem(scrapy.Item):
         output_processor=TakeFirst()
     )
     size = scrapy.Field(
-        input_processor=MapCompose(),
+        input_processor=MapCompose(clean_size),
         output_processor=TakeFirst()
     )
     availability_date = scrapy.Field(
