@@ -7,58 +7,6 @@ from asset.urls import urls
 from asset.selectors import selectors
 
 
-def check_is_detail_extraction_complete(text):
-    return constants.DETAIL_BREAKING_POINT in text
-
-
-def check_is_cleaned_text_empty(text):
-    text.replace('\n', '').replace('\t', '').replace('\xa0', ' ').strip()
-    return text.isspace()
-
-
-def complete_product_detail_list(detail_content, product):
-    is_detail_completed = constants.IS_DETAIL_COMPLETED
-
-    for detail in detail_content:
-        detail_text = detail.css(selectors.DETAIL_TEXT).getall()
-        if is_detail_completed is True:
-            break
-
-        for info in detail_text:
-
-            if check_is_detail_extraction_complete(info):
-                is_detail_completed = True
-                break
-
-            if check_is_cleaned_text_empty(info):
-                continue
-            product.add_value('details_list', info)
-
-
-def add_product_overview_details(product, overview_details):
-    overview_fields = ['Prijs', 'Available', 'Bedrooms', 'Bathrooms', 'Furnished', 'Type', 'Size', 'ID']
-    product_field_map = ['price_in_euro', 'availability_date', 'bedrooms', 'bathrooms', 'furnished_status', 'type',
-                         'size', 'id']
-
-    for field in overview_fields:
-        if field in overview_details:
-            field_index = overview_details.index(field)
-            value_index = field_index + 1
-            mapping_index = overview_fields.index(field)
-            product.add_value(product_field_map[mapping_index], overview_details[value_index])
-
-
-def add_product_location_fields(product, location):
-    location_to_index_mapping = [
-        {'field_name': 'city', 'index': 0},
-        {'field_name': 'district', 'index': 1},
-        {'field_name': 'local_area', 'index': 2},
-    ]
-
-    for location_index_map in location_to_index_mapping:
-        product.add_value(location_index_map['field_name'], location[location_index_map['index']])
-
-
 class AssetSpider(scrapy.Spider):
     name = "samurai"
     start_urls = [urls.ASSET_URL]
@@ -77,7 +25,7 @@ class AssetSpider(scrapy.Spider):
             product.add_value('badge_status', badge_status)
 
             location = rental.css(selectors.LOCATION).getall()
-            add_product_location_fields(product, location)
+            self.add_product_location_fields(product, location)
 
             rental_detail_link = rental.css(selectors.FURTHER_DETAIL_LINK).get()
             yield scrapy.Request(rental_detail_link, callback=self.detail_parse, meta={"product": product})
@@ -86,15 +34,14 @@ class AssetSpider(scrapy.Spider):
         if next_page_link is not None:
             yield scrapy.Request(next_page_link, callback=self.parse)
 
-    @staticmethod
-    def detail_parse(response):
+    def detail_parse(self, response):
         product = response.meta["product"]
 
         overview_details = response.css(selectors.OVERVIEW_DETAILS).getall()
-        add_product_overview_details(product, overview_details)
+        self.add_product_overview_details(product, overview_details)
 
         detail_content = response.css(selectors.DETAIL_CONTENT)
-        complete_product_detail_list(detail_content, product)
+        self.complete_product_detail_list(detail_content, product)
 
         images_urls_list = response.css(selectors.IMAGES_URLS).getall()
         for image in images_urls_list:
@@ -105,3 +52,54 @@ class AssetSpider(scrapy.Spider):
             product.add_value('facilities_list', facility)
 
         yield product.load_item()
+
+    def complete_product_detail_list(self, detail_content, product):
+        is_detail_completed = constants.IS_DETAIL_COMPLETED
+
+        for detail in detail_content:
+            detail_text = detail.css(selectors.DETAIL_TEXT).getall()
+            if is_detail_completed is True:
+                break
+
+            for info in detail_text:
+
+                if self.check_is_detail_extraction_complete(info):
+                    is_detail_completed = True
+                    break
+
+                if self.check_is_cleaned_text_empty(info):
+                    continue
+                product.add_value('details_list', info)
+
+    @staticmethod
+    def check_is_detail_extraction_complete(text):
+        return constants.DETAIL_BREAKING_POINT in text
+
+    @staticmethod
+    def check_is_cleaned_text_empty(text):
+        text.replace('\n', '').replace('\t', '').replace('\xa0', ' ').strip()
+        return text.isspace()
+
+    @staticmethod
+    def add_product_overview_details(product, overview_details):
+        overview_fields = ['Prijs', 'Available', 'Bedrooms', 'Bathrooms', 'Furnished', 'Type', 'Size', 'ID']
+        product_field_map = ['price_in_euro', 'availability_date', 'bedrooms', 'bathrooms', 'furnished_status', 'type',
+                             'size', 'id']
+
+        for field in overview_fields:
+            if field in overview_details:
+                field_index = overview_details.index(field)
+                value_index = field_index + 1
+                mapping_index = overview_fields.index(field)
+                product.add_value(product_field_map[mapping_index], overview_details[value_index])
+
+    @staticmethod
+    def add_product_location_fields(product, location):
+        location_to_index_mapping = [
+            {'field_name': 'city', 'index': 0},
+            {'field_name': 'district', 'index': 1},
+            {'field_name': 'local_area', 'index': 2},
+        ]
+
+        for location_index_map in location_to_index_mapping:
+            product.add_value(location_index_map['field_name'], location[location_index_map['index']])
